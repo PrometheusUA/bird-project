@@ -1,0 +1,11 @@
+services:
+  prediction:
+    build: .
+    environment:
+      - WEIGHTS_PATH=/app/data/models/baseline-149.pt
+      - CLASSES_COUNT=149
+      - UPLOAD_FOLDER=/app/data/upload/
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../data/models:/app/data/models
