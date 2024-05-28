@@ -1,14 +1,12 @@
 import os
 
-import torch
+import onnxruntime as ort
+import numpy as np
 from flask import Flask, jsonify, request
 import librosa
 
-from model import BaselineBirdClassifier
-
 
 app = Flask(__name__)
-model = None
 
 
 @app.route('/predict', methods=['POST'])
@@ -30,23 +28,31 @@ def example():
         return "Something went wrong", 500
     
     try:
-        audio, sr = librosa.load(final_path, sr=model.sr)
+        audio, _ = librosa.load(final_path, sr=sample_rate, mono=False)
     except:
         return "Corrupted file!", 400
+    
+    mono_audio = False
+    if len(audio.shape) == 1: # Mono channel audio
+        mono_audio = True
+        audio = audio[None, :]
 
-    result = model(torch.tensor(audio).unsqueeze(0))[0]
-    return jsonify(result), 200
+    result = ort_sess.run(None, {'input': audio})[0]
+
+    if mono_audio:
+        result = result[0]
+    else:
+        result = np.max(result, axis=0)
+
+    return jsonify({"probabilities": result.tolist()}), 200
 
 
 if __name__ == '__main__':
-    model_weights_path = os.environ.get('WEIGHTS_PATH', '../data/models/baseline.pt')
-    sample_rate = os.environ.get("SAMPLE_RATE", 32000)
-    model_classes_count = os.environ.get("CLASSES_COUNT", 100)
+    model_path = os.environ.get('MODEL_PATH', '../data/models/baseline.onnx')
+    sample_rate = int(os.environ.get("SAMPLE_RATE", 32000))
     upload_folder = os.environ.get('UPLOAD_FOLDER', './data')
 
-    model = BaselineBirdClassifier(model_classes_count, sample_rate)
-    model.load_state_dict(torch.load(model_weights_path))
-    model.eval()
+    ort_sess = ort.InferenceSession(model_path)
 
     app.config['UPLOAD_FOLDER'] = upload_folder
     if not os.path.exists(upload_folder):

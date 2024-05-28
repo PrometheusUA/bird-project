@@ -2,8 +2,7 @@ services:
   prediction:
     build: .
     environment:
-      - WEIGHTS_PATH=/app/data/models/baseline-149.pt
-      - CLASSES_COUNT=149
+      - MODEL_PATH=/app/data/models/baseline-149.onnx
       - UPLOAD_FOLDER=/app/data/upload/
     ports:
       - "5000:5000"
