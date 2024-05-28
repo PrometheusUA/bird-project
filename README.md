@@ -16,3 +16,9 @@ Folders structure is as follows:
 - `prediction_service`: Docker file and docker-compose for prediction service run. To run it, use `docker-compose up`.
 - `download_data_s3.py`: script to download "labeled" data from AWS S3. Needs `credentials.py` file with access key, based on `credentials-sample.py`.
 - `requirements.txt`: Text file with venv packages.
+
+## Services API
+
+### Prediction service
+
+- POST to `localhost:5000/predict`: predict for the file that is transfered through files['file'], returns n_classes probabilities for bird species.
