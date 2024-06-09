@@ -1,0 +1,23 @@
+services:
+  train:
+    image: training_service:1.0.7
+    env_file:
+      - .env
+    environment:
+      - ARTIFACTS_URL=s3://bird-project-artifacts/test2
+      - DATA_BUCKET_NAME=bird-project-bucket
+      - TRAIN_DATA_PATH=/app/data/train_data
+      - MODEL_SAVE_PATH=/app/data/models
+      - EXPERIMENT_NAME=test2
+      - VAL_FRAC=0.1
+      - BATCH_SIZE=16
+      - EPOCHS_COUNT=2
+      - EVAL_EVERY_STEPS=20
+      - LEARNING_RATE=0.001
+      - SAMPLE_RATE=32000
+      - SAMPLE_LEN_SEC=10
+    ports:
+      - "5001:5000"
+    volumes:
+      - ../data/train_data_s3:/app/data/train_data
+    
