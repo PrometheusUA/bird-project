@@ -23,8 +23,8 @@ def health():
 
 @app.route('/train', methods=['POST'])
 def train():
-    # download_bucket(os.environ.get("AWS_ACCESS_KEY_ID"), os.environ.get("AWS_SECRET_ACCESS_KEY"),
-    #                 '', os.environ.get("TRAIN_DATA_PATH"), os.environ.get("DATA_BUCKET_NAME"))
+    download_bucket(os.environ.get("AWS_ACCESS_KEY_ID"), os.environ.get("AWS_SECRET_ACCESS_KEY"),
+                    '', os.environ.get("TRAIN_DATA_PATH"), os.environ.get("DATA_BUCKET_NAME"))
     
     val_frac = float(os.environ.get("VAL_FRAC", 0.1))
     batch_size = int(os.environ.get("BATCH_SIZE", 16))
