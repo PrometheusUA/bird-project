@@ -1,0 +1,899 @@
+{
+  "components": {
+    "comp-condition-1": {
+      "dag": {
+        "outputs": {
+          "artifacts": {
+            "eval-model-metrics": {
+              "artifactSelectors": [
+                {
+                  "outputArtifactKey": "metrics",
+                  "producerSubtask": "eval-model"
+                }
+              ]
+            }
+          }
+        },
+        "tasks": {
+          "condition-2": {
+            "componentRef": {
+              "name": "comp-condition-2"
+            },
+            "dependentTasks": [
+              "eval-model",
+              "preprocess-data",
+              "train-model"
+            ],
+            "inputs": {
+              "artifacts": {
+                "pipelinechannel--preprocess-data-CLASS2ID_data": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "CLASS2ID_data",
+                    "producerTask": "preprocess-data"
+                  }
+                },
+                "pipelinechannel--train-model-model_out": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "model_out",
+                    "producerTask": "train-model"
+                  }
+                }
+              },
+              "parameters": {
+                "pipelinechannel--display_name": {
+                  "componentInputParameter": "pipelinechannel--display_name"
+                },
+                "pipelinechannel--eval-model-main_metric_val": {
+                  "taskOutputParameter": {
+                    "outputParameterKey": "main_metric_val",
+                    "producerTask": "eval-model"
+                  }
+                },
+                "pipelinechannel--main_metric_thresh": {
+                  "componentInputParameter": "pipelinechannel--main_metric_thresh"
+                },
+                "pipelinechannel--min_samples_grow": {
+                  "componentInputParameter": "pipelinechannel--min_samples_grow"
+                },
+                "pipelinechannel--obtain-data-new_samples_count": {
+                  "componentInputParameter": "pipelinechannel--obtain-data-new_samples_count"
+                },
+                "pipelinechannel--project": {
+                  "componentInputParameter": "pipelinechannel--project"
+                },
+                "pipelinechannel--region": {
+                  "componentInputParameter": "pipelinechannel--region"
+                },
+                "pipelinechannel--serving_container_image_uri": {
+                  "componentInputParameter": "pipelinechannel--serving_container_image_uri"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "save-model-choice"
+            },
+            "triggerPolicy": {
+              "condition": "inputs.parameter_values['pipelinechannel--eval-model-main_metric_val'] > inputs.parameter_values['pipelinechannel--main_metric_thresh']"
+            }
+          },
+          "eval-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-eval-model"
+            },
+            "dependentTasks": [
+              "preprocess-data",
+              "train-model",
+              "train-test-split"
+            ],
+            "inputs": {
+              "artifacts": {
+                "CLASS2ID_data": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "CLASS2ID_data",
+                    "producerTask": "preprocess-data"
+                  }
+                },
+                "dataset_test": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "dataset_test",
+                    "producerTask": "train-test-split"
+                  }
+                },
+                "model_out": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "model_out",
+                    "producerTask": "train-model"
+                  }
+                }
+              },
+              "parameters": {
+                "main_metric": {
+                  "componentInputParameter": "pipelinechannel--main_metric"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "eval-model"
+            }
+          },
+          "preprocess-data": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-preprocess-data"
+            },
+            "inputs": {
+              "artifacts": {
+                "dataset_full": {
+                  "componentInputArtifact": "pipelinechannel--obtain-data-dataset_full"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "preprocess-data"
+            }
+          },
+          "train-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-train-model"
+            },
+            "dependentTasks": [
+              "preprocess-data",
+              "train-test-split"
+            ],
+            "inputs": {
+              "artifacts": {
+                "CLASS2ID_data": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "CLASS2ID_data",
+                    "producerTask": "preprocess-data"
+                  }
+                },
+                "dataset_train": {
+                  "taskOutputArtifact": {
+                    "outputArtifactKey": "dataset_train",
+                    "producerTask": "train-test-split"
+                  }
+                }
+              },
+              "parameters": {
+                "batch_size": {
+                  "componentInputParameter": "pipelinechannel--batch_size"
+                },
+                "epochs_count": {
+                  "componentInputParameter": "pipelinechannel--epochs_count"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "train-model"
+            }
+          },
+          "train-test-split": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-train-test-split"
+            },
+            "dependentTasks": [
+              "preprocess-data"
+            ],
+            "inputs": {
+              "artifacts": {
+                "dataset_full": {
+                  "componentInputArtifact": "pipelinechannel--obtain-data-dataset_full"
+                }
+              },
+              "parameters": {
+                "test_size": {
+                  "componentInputParameter": "pipelinechannel--test_size"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "train-test-split"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "artifacts": {
+          "pipelinechannel--obtain-data-dataset_full": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "pipelinechannel--batch_size": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--display_name": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--epochs_count": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--main_metric": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--main_metric_thresh": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "pipelinechannel--min_samples_grow": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--obtain-data-new_samples_count": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--project": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--region": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--serving_container_image_uri": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--test_size": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "eval-model-metrics": {
+            "artifactType": {
+              "schemaTitle": "system.Metrics",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-condition-2": {
+      "dag": {
+        "tasks": {
+          "deploy-model": {
+            "cachingOptions": {
+              "enableCache": true
+            },
+            "componentRef": {
+              "name": "comp-deploy-model"
+            },
+            "inputs": {
+              "artifacts": {
+                "CLASS2ID_data": {
+                  "componentInputArtifact": "pipelinechannel--preprocess-data-CLASS2ID_data"
+                },
+                "model": {
+                  "componentInputArtifact": "pipelinechannel--train-model-model_out"
+                }
+              },
+              "parameters": {
+                "display_name": {
+                  "componentInputParameter": "pipelinechannel--display_name"
+                },
+                "gcp_project": {
+                  "componentInputParameter": "pipelinechannel--project"
+                },
+                "gcp_region": {
+                  "componentInputParameter": "pipelinechannel--region"
+                },
+                "model_endpoint": {
+                  "runtimeValue": {
+                    "constant": "{{$.inputs.parameters['pipelinechannel--display_name']}}_endpoint"
+                  }
+                },
+                "pipelinechannel--display_name": {
+                  "componentInputParameter": "pipelinechannel--display_name"
+                },
+                "serving_container_image_uri": {
+                  "componentInputParameter": "pipelinechannel--serving_container_image_uri"
+                }
+              }
+            },
+            "taskInfo": {
+              "name": "deploy-model"
+            }
+          }
+        }
+      },
+      "inputDefinitions": {
+        "artifacts": {
+          "pipelinechannel--preprocess-data-CLASS2ID_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "pipelinechannel--train-model-model_out": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "pipelinechannel--display_name": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--eval-model-main_metric_val": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "pipelinechannel--main_metric_thresh": {
+            "parameterType": "NUMBER_DOUBLE"
+          },
+          "pipelinechannel--min_samples_grow": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--obtain-data-new_samples_count": {
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "pipelinechannel--project": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--region": {
+            "parameterType": "STRING"
+          },
+          "pipelinechannel--serving_container_image_uri": {
+            "parameterType": "STRING"
+          }
+        }
+      }
+    },
+    "comp-deploy-model": {
+      "executorLabel": "exec-deploy-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "CLASS2ID_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "display_name": {
+            "parameterType": "STRING"
+          },
+          "gcp_project": {
+            "parameterType": "STRING"
+          },
+          "gcp_region": {
+            "parameterType": "STRING"
+          },
+          "model_endpoint": {
+            "parameterType": "STRING"
+          },
+          "serving_container_image_uri": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "model_onnx": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "vertex_endpoint": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "vertex_model": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-eval-model": {
+      "executorLabel": "exec-eval-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "CLASS2ID_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "dataset_test": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "model_out": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "main_metric": {
+            "parameterType": "STRING"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "metrics": {
+            "artifactType": {
+              "schemaTitle": "system.Metrics",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "main_metric_val": {
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      }
+    },
+    "comp-obtain-data": {
+      "executorLabel": "exec-obtain-data",
+      "inputDefinitions": {
+        "parameters": {
+          "dataset_bucket": {
+            "parameterType": "STRING"
+          },
+          "min_samples_grow": {
+            "defaultValue": 1.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "samples_download": {
+            "parameterType": "NUMBER_INTEGER"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "dataset_full": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "new_samples_count": {
+            "parameterType": "NUMBER_INTEGER"
+          }
+        }
+      }
+    },
+    "comp-preprocess-data": {
+      "executorLabel": "exec-preprocess-data",
+      "inputDefinitions": {
+        "artifacts": {
+          "dataset_full": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "CLASS2ID_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-train-model": {
+      "executorLabel": "exec-train-model",
+      "inputDefinitions": {
+        "artifacts": {
+          "CLASS2ID_data": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "dataset_train": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "batch_size": {
+            "defaultValue": 16.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          },
+          "epochs_count": {
+            "defaultValue": 10.0,
+            "isOptional": true,
+            "parameterType": "NUMBER_INTEGER"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "model_out": {
+            "artifactType": {
+              "schemaTitle": "system.Model",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-train-test-split": {
+      "executorLabel": "exec-train-test-split",
+      "inputDefinitions": {
+        "artifacts": {
+          "dataset_full": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        },
+        "parameters": {
+          "test_size": {
+            "defaultValue": 0.05,
+            "isOptional": true,
+            "parameterType": "NUMBER_DOUBLE"
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "dataset_test": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          },
+          "dataset_train": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "defaultPipelineRoot": "gs://bird-project-mlops-vertex-pipebucket/training_pipe/",
+  "deploymentSpec": {
+    "executors": {
+      "exec-deploy-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "deploy_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage==2.17.0' 'google-cloud-aiplatform==1.59.0' 'onnx==1.16.1' 'onnxscript==0.1.0.dev20240528' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef deploy_model(\n        serving_container_image_uri: str,\n        display_name: str,\n        model_endpoint: str,\n        gcp_project: str,\n        gcp_region: str,\n        model: Input[Model],\n        CLASS2ID_data: Input[Dataset],\n        model_onnx: Output[Model],\n        vertex_model: Output[Model],\n        vertex_endpoint: Output[Model]\n):\n    from google.cloud import aiplatform as vertex_ai\n    from pathlib import Path\n    import json\n    import torch\n    import logging\n\n    from src.dataset import SAMPLE_RATE, SAMPLE_LEN_SEC\n    from src.model import BaselineBirdClassifier\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    with open(CLASS2ID_data.path, 'r') as class2id_file:\n        CLASS2ID = json.load(class2id_file)\n\n    # Checks existing Vertex AI Enpoint or creates Endpoint if it is not exist.\n    def create_endpoint ():\n        endpoints = vertex_ai.Endpoint.list(\n            filter=f'display_name=\"{model_endpoint}\"',\n            order_by='create_time desc',\n            project=gcp_project,\n            location=gcp_region,\n        )\n        if len(endpoints) > 0:\n            endpoint = endpoints[0] # most recently created\n        else:\n            endpoint = vertex_ai.Endpoint.create(\n                display_name=model_endpoint,\n                project=gcp_project,\n                location=gcp_region\n        )\n        return endpoint\n\n    endpoint = create_endpoint()\n\n    logging.info(\"Endpoint created\")\n\n    # Uploads trained model to Vertex AI Model Registry or creates new model version into existing uploaded one.\n    def upload_model():\n        listed_model = vertex_ai.Model.list(\n            filter=f'display_name=\"{display_name}\"',\n            project=gcp_project,\n            location=gcp_region,\n        )\n        if len(listed_model) > 0:\n            model_version = listed_model[0] # most recently created\n            model_upload = vertex_ai.Model.upload(\n                    display_name=display_name,\n                    parent_model=model_version.resource_name,\n                    artifact_uri=str(Path(model_onnx.path).parent),\n                    serving_container_image_uri=serving_container_image_uri,\n                    location=gcp_region,\n                    serving_container_predict_route=\"/predict\",\n                    serving_container_health_route=\"/health\"\n            )\n        else:\n            model_upload = vertex_ai.Model.upload(\n                    display_name=display_name,\n                    artifact_uri=str(Path(model_onnx.path).parent),\n                    serving_container_image_uri=serving_container_image_uri,\n                    location=gcp_region,\n                    serving_container_predict_route=\"/predict\",\n                    serving_container_health_route=\"/health\"\n            )\n        return model_upload\n\n    model_pt = BaselineBirdClassifier(len(CLASS2ID), sr=SAMPLE_RATE)\n    model_pt.load_state_dict(torch.load(model.path, map_location='cpu'))\n    model_pt.eval()\n\n    logging.info(\"Torch model downloaded\")\n\n    torch_input = torch.randn(8, SAMPLE_RATE*SAMPLE_LEN_SEC)\n    torch.onnx.export(model_pt.cpu(),\n                    torch_input,\n                    model_onnx.path,\n                    export_params=True,\n                    do_constant_folding=True,\n                    input_names = ['input'],\n                    output_names = ['output'],\n                    dynamic_axes={'input' : {0: 'batch_size', 1: 'sample_length'},\n                                'output' : {0: 'batch_size'}}\n    )\n\n    logging.info(\"ONNX model created\")\n\n    uploaded_model = upload_model()\n\n    logging.info(\"Model uploaded\")\n\n    # Save data to the output params\n    vertex_model.uri = uploaded_model.resource_name\n\n    # Deploys trained model to Vertex AI Endpoint\n    model_deploy = uploaded_model.deploy(\n        machine_type='e2-standard-4',\n        endpoint=endpoint,\n        traffic_split={\"0\": 100},\n        deployed_model_display_name=display_name,\n    )\n\n    logging.info(\"Model deployed\")\n\n    # Save data to the output params\n    vertex_endpoint.uri = model_deploy.resource_name\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      },
+      "exec-eval-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "eval_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef eval_model(dataset_test: Input[Dataset],\n                CLASS2ID_data: Input[Dataset],\n                model_out: Input[Model],\n                metrics: Output[Metrics],\n                main_metric: str) -> NamedTuple(\"Outputs\", [(\"main_metric_val\", float)]):\n    import torch\n    import pandas as pd\n    import numpy as np\n    from torch.utils.data import DataLoader\n    import logging\n    import os\n    import json\n    from collections import namedtuple\n\n    from src.dataset import AudioDataset, SAMPLE_RATE, obtain_metrics\n    from src.model import BaselineBirdClassifier\n\n    with open(CLASS2ID_data.path, 'r') as class2id_file:\n        CLASS2ID = json.load(class2id_file)\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    test_df = pd.read_csv(dataset_test.path)\n\n    test_ds = AudioDataset(test_df['file_path'].tolist(), test_df['label_id'].tolist())\n    test_loader = DataLoader(test_ds, batch_size=1, shuffle=False)\n\n    logging.info(\"Test dataset and dataloader created\")\n\n    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')\n\n    model = BaselineBirdClassifier(len(CLASS2ID), sr=SAMPLE_RATE)\n    model.load_state_dict(torch.load(model_out.path, map_location=device))\n\n    logging.info(\"Model loaded\")\n\n    loss_fn = torch.nn.CrossEntropyLoss()\n\n    model.eval()\n    eval_running_loss = 0.\n    outputs_list = []\n    labels_list = []\n    with torch.no_grad():\n        for audios, labels in test_loader:\n            audios = audios.to(device)\n            labels = labels.to(device)\n\n            outputs = model(audios)\n            loss = loss_fn(outputs, labels)\n\n            eval_running_loss += loss.item()\n            outputs_list.append(outputs.cpu().numpy())\n            labels_list.append(labels.cpu().numpy())\n\n    logging.info(\"Test dataset forward pass finished\")\n\n    eval_running_loss = eval_running_loss/len(test_loader.dataset)\n\n    outputs = np.concatenate(outputs_list, axis=0)\n    labels = np.concatenate(labels_list, axis=0)\n\n    test_metrics = obtain_metrics(labels, outputs)\n\n    logging.info(\"Metrics calculated\")\n\n    for metric_name, val in test_metrics.items():\n        metrics.log_metric(metric_name, float(val))\n\n    logging.info(\"Test metrics logged\")\n\n    outputs = namedtuple(\"Outputs\", [\"main_metric_val\"])\n    return outputs(test_metrics[main_metric])\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      },
+      "exec-obtain-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "obtain_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-storage==2.17.0' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef obtain_data(\n    dataset_bucket: str,\n    samples_download: int,\n    dataset_full: Output[Dataset],\n    # new_samples_count: Output[Metrics],\n    min_samples_grow: int = 1,\n) -> NamedTuple(\"Outputs\", [(\"new_samples_count\", int)]):\n    import os\n    import logging\n    from google.cloud.storage import Client, transfer_manager\n    import pandas as pd\n    from time import sleep\n    from collections import namedtuple\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    def download_bucket_with_transfer_manager(\n        bucket_name, destination_directory=\"\", workers=8, max_results=1000\n    ):\n        \"\"\"Download all of the blobs in a bucket, concurrently in a process pool.\n\n        The filename of each blob once downloaded is derived from the blob name and\n        the `destination_directory `parameter. For complete control of the filename\n        of each blob, use transfer_manager.download_many() instead.\n\n        Directories will be created automatically as needed, for instance to\n        accommodate blob names that include slashes.\n        \"\"\"\n\n        # The ID of your GCS bucket\n        # bucket_name = \"your-bucket-name\"\n\n        # The directory on your computer to which to download all of the files. This\n        # string is prepended (with os.path.join()) to the name of each blob to form\n        # the full path. Relative paths and absolute paths are both accepted. An\n        # empty string means \"the current working directory\". Note that this\n        # parameter allows accepts directory traversal (\"../\" etc.) and is not\n        # intended for unsanitized end user input.\n        # destination_directory = \"\"\n\n        # The maximum number of processes to use for the operation. The performance\n        # impact of this value depends on the use case, but smaller files usually\n        # benefit from a higher number of processes. Each additional process occupies\n        # some CPU and memory resources until finished. Threads can be used instead\n        # of processes by passing `worker_type=transfer_manager.THREAD`.\n        # workers=8\n\n        # The maximum number of results to fetch from bucket.list_blobs(). This\n        # sample code fetches all of the blobs up to max_results and queues them all\n        # for download at once. Though they will still be executed in batches up to\n        # the processes limit, queueing them all at once can be taxing on system\n        # memory if buckets are very large. Adjust max_results as needed for your\n        # system environment, or set it to None if you are sure the bucket is not\n        # too large to hold in memory easily.\n        # max_results=1000\n        logging.info(\"Libs imported\")\n\n        storage_client = Client()\n\n        logging.info(\"Client created\")\n\n        bucket = storage_client.bucket(bucket_name)\n\n        logging.info(\"Bucket created\")\n\n        blob_names = [blob.name for blob in bucket.list_blobs(max_results=max_results)]\n\n        logging.info(\"Blobs listed\")\n\n        transfer_manager.download_many_to_path(\n            bucket, blob_names, destination_directory=destination_directory, max_workers=workers\n        )\n\n        logging.info(\"Blobs downloaded\")\n\n    download_bucket_with_transfer_manager(dataset_bucket, dataset_full.path, max_results = samples_download)\n\n    dataset_df_path = os.path.join(dataset_full.path, 'dataset.csv')\n    df = pd.read_csv(dataset_df_path)\n\n    if 'trained_on' in df.columns:\n        new_samples_count_val = len(df) - len(df.loc[df['trained_on']])\n    else:\n        new_samples_count_val = len(df)\n\n    if new_samples_count_val > min_samples_grow:\n        df['trained_on'] = True\n\n        df.to_csv(dataset_df_path, index=False)\n\n        storage_client = Client()\n        bucket = storage_client.bucket(dataset_bucket)\n\n        bucket.delete_blob('dataset.csv')\n\n        sleep(10)\n\n        blob = bucket.blob('dataset.csv')\n        blob.upload_from_filename(dataset_df_path, if_generation_match=0)\n\n    outputs = namedtuple(\"Outputs\", [\"new_samples_count\"])\n    return outputs(new_samples_count_val)\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      },
+      "exec-preprocess-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "preprocess_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef preprocess_data(\n    dataset_full: Input[Dataset],\n    CLASS2ID_data: Output[Dataset],\n):\n    import os\n    import json\n    import logging\n    import pandas as pd\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    dataset_df_path = os.path.join(dataset_full.path, 'dataset.csv')\n    df = pd.read_csv(dataset_df_path)\n\n    logging.info(\"Dataframe loaded\")\n\n    df['file_path'] = df['path'].apply(lambda x: f\"{dataset_full.path}/{x.split('/', 3)[-1]}\")\n\n    df = df.loc[df['file_path'].apply(os.path.exists)]\n\n    CLASS2ID = {classname: i for i, classname in enumerate(df['label'].unique())}\n    class2id_json = json.dumps(CLASS2ID, indent=4)\n    with open(CLASS2ID_data.path, 'w') as class2id_file:\n        class2id_file.write(class2id_json)\n\n    df['label_id'] = df['label'].apply(CLASS2ID.get)\n\n    df.to_csv(dataset_df_path, index=False)\n\n    logging.info(\"Dataframe saved\")\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      },
+      "exec-train-model": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_model"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_model(dataset_train: Input[Dataset],\n                CLASS2ID_data: Input[Dataset],\n                model_out: Output[Model],\n                batch_size: int = 16,\n                epochs_count: int = 10):\n    import torch\n    import pandas as pd\n    import numpy as np\n    from torch.utils.data import DataLoader\n    from tqdm import tqdm\n    import logging\n    import os\n    import json\n\n    from src.dataset import AudioDataset, SAMPLE_LEN_SEC, SAMPLE_RATE\n    from src.model import BaselineBirdClassifier\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    with open(CLASS2ID_data.path, 'r') as class2id_file:\n        CLASS2ID = json.load(class2id_file)\n\n    train_df = pd.read_csv(dataset_train.path)\n\n    train_ds = AudioDataset(train_df['file_path'].tolist(), train_df['label_id'].tolist())\n    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)\n\n    logging.info(\"Dataset and dataloader for train created\")\n\n    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')\n\n    model = BaselineBirdClassifier(len(CLASS2ID), sr=SAMPLE_RATE).to(device)\n\n    logging.info(\"Model created\")\n\n    loss_fn = torch.nn.CrossEntropyLoss()\n    optimizer = torch.optim.RAdam(model.parameters(), lr=1e-3)\n\n    batch_num = 0\n\n    for epoch in tqdm(range(epochs_count), desc='Epoch'):\n        for audios, labels in train_loader:\n            audios = audios.to(device)\n            labels = labels.to(device)\n\n            optimizer.zero_grad()\n            outputs = model(audios)\n\n            loss = loss_fn(outputs, labels)\n            loss.backward()\n\n            optimizer.step()            \n            batch_num += 1\n\n    logging.info(\"Model trained\")\n\n    torch.save(model.state_dict(), model_out.path)\n\n    logging.info(\"Model saved\")\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      },
+      "exec-train-test-split": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "train_test_split"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef train_test_split(dataset_full: Input[Dataset],\n                     dataset_train: Output[Dataset],\n                     dataset_test: Output[Dataset],\n                     test_size: float = 0.05):\n    import pandas as pd\n    import logging\n    import os\n\n    logging.getLogger().setLevel(logging.INFO)\n\n    dataset_df_path = os.path.join(dataset_full.path, 'dataset.csv')\n    df = pd.read_csv(dataset_df_path)\n\n    df_test = df.sample(int(test_size * len(df)))\n    df_train = df.loc[~df.index.isin(df_test.index)]\n\n    logging.info(\"Dataframe splitted\")\n\n    df_train.to_csv(dataset_train.path, index=False)\n    df_test.to_csv(dataset_test.path, index=False)\n    logging.info(\"Dataframes splitted saved\")\n\n"
+          ],
+          "image": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/training"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "name": "bird-pipeline"
+  },
+  "root": {
+    "dag": {
+      "outputs": {
+        "artifacts": {
+          "eval-model-metrics": {
+            "artifactSelectors": [
+              {
+                "outputArtifactKey": "eval-model-metrics",
+                "producerSubtask": "condition-1"
+              }
+            ]
+          }
+        }
+      },
+      "tasks": {
+        "condition-1": {
+          "componentRef": {
+            "name": "comp-condition-1"
+          },
+          "dependentTasks": [
+            "obtain-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "pipelinechannel--obtain-data-dataset_full": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "dataset_full",
+                  "producerTask": "obtain-data"
+                }
+              }
+            },
+            "parameters": {
+              "pipelinechannel--batch_size": {
+                "componentInputParameter": "batch_size"
+              },
+              "pipelinechannel--display_name": {
+                "componentInputParameter": "display_name"
+              },
+              "pipelinechannel--epochs_count": {
+                "componentInputParameter": "epochs_count"
+              },
+              "pipelinechannel--main_metric": {
+                "componentInputParameter": "main_metric"
+              },
+              "pipelinechannel--main_metric_thresh": {
+                "componentInputParameter": "main_metric_thresh"
+              },
+              "pipelinechannel--min_samples_grow": {
+                "componentInputParameter": "min_samples_grow"
+              },
+              "pipelinechannel--obtain-data-new_samples_count": {
+                "taskOutputParameter": {
+                  "outputParameterKey": "new_samples_count",
+                  "producerTask": "obtain-data"
+                }
+              },
+              "pipelinechannel--project": {
+                "componentInputParameter": "project"
+              },
+              "pipelinechannel--region": {
+                "componentInputParameter": "region"
+              },
+              "pipelinechannel--serving_container_image_uri": {
+                "componentInputParameter": "serving_container_image_uri"
+              },
+              "pipelinechannel--test_size": {
+                "componentInputParameter": "test_size"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "enough-new-data"
+          },
+          "triggerPolicy": {
+            "condition": "int(inputs.parameter_values['pipelinechannel--obtain-data-new_samples_count']) > int(inputs.parameter_values['pipelinechannel--min_samples_grow'])"
+          }
+        },
+        "obtain-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-obtain-data"
+          },
+          "inputs": {
+            "parameters": {
+              "dataset_bucket": {
+                "componentInputParameter": "data_filepath"
+              },
+              "min_samples_grow": {
+                "componentInputParameter": "min_samples_grow"
+              },
+              "samples_download": {
+                "componentInputParameter": "samples_download"
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "obtain-data"
+          }
+        }
+      }
+    },
+    "inputDefinitions": {
+      "parameters": {
+        "batch_size": {
+          "defaultValue": 16.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "data_filepath": {
+          "defaultValue": "bird-project-mlops-vertex-data",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "display_name": {
+          "defaultValue": "birds",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "epochs_count": {
+          "defaultValue": 1.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "main_metric": {
+          "defaultValue": "macro_f1",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "main_metric_thresh": {
+          "defaultValue": 0.75,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        },
+        "min_samples_grow": {
+          "defaultValue": -1.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "project": {
+          "defaultValue": "bird-project-mlops-vertex",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "region": {
+          "defaultValue": "us-central1",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "samples_download": {
+          "defaultValue": 40.0,
+          "isOptional": true,
+          "parameterType": "NUMBER_INTEGER"
+        },
+        "serving_container_image_uri": {
+          "defaultValue": "us-central1-docker.pkg.dev/bird-project-mlops-vertex/bird-containers/serving",
+          "isOptional": true,
+          "parameterType": "STRING"
+        },
+        "test_size": {
+          "defaultValue": 0.05,
+          "isOptional": true,
+          "parameterType": "NUMBER_DOUBLE"
+        }
+      }
+    },
+    "outputDefinitions": {
+      "artifacts": {
+        "eval-model-metrics": {
+          "artifactType": {
+            "schemaTitle": "system.Metrics",
+            "schemaVersion": "0.0.1"
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.8.0"
+}

@@ -1,16 +1,12 @@
-FROM python:3.11-slim-bookworm
+FROM mirror.gcr.io/library/python:3.11-slim-bookworm
 
+RUN mkdir -p /app/model
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
+COPY requirements.txt /app/requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
 
-EXPOSE 5000
-
-ENV FLASK_ENV=development
-
-ENTRYPOINT [ "python" ] 
-CMD ["-u", "main.py"]
+CMD exec gunicorn --bind :$AIP_HTTP_PORT --log-level info --workers 1 --timeout 90 app:app
